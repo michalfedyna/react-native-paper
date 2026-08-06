@@ -1,6 +1,5 @@
 import { Platform, StyleSheet, View } from 'react-native';
 
-import { useNavigation } from '@react-navigation/native';
 import {
   createNativeStackNavigator,
   createNativeStackScreen,
@@ -9,6 +8,9 @@ import {
 import { Appbar } from 'react-native-paper';
 
 import ExampleList, { examples } from './ExampleList';
+import PreferencesModal from './Preferences/PreferencesModal';
+import { usePreferences } from './Preferences/usePreferences';
+import MainSample from './Samples/MainSample';
 
 const { TeamDetails, ...examplesWithoutParams } = examples;
 
@@ -19,30 +21,47 @@ const fromEntries = <Key extends PropertyKey, Value>(
 ) => Object.fromEntries(entries) as Record<Key, Value>;
 
 function Header({ navigation, route, options, back }: NativeStackHeaderProps) {
-  const drawerNavigation = useNavigation('Home');
+  const { togglePreferences } = usePreferences();
+
+  const isIOS = Platform.OS === 'ios';
+
+  const backAction = <Appbar.BackAction onPress={() => navigation.goBack()} />;
+  const searchAction = (
+    <Appbar.Action
+      icon="folder-search"
+      onPress={() => navigation.navigate('ExampleList')}
+    />
+  );
 
   return (
     <Appbar.Header elevated>
-      {back ? (
-        <Appbar.BackAction onPress={() => navigation.goBack()} />
-      ) : (
-        <Appbar.Action
-          icon="menu"
-          isLeading
-          onPress={() => drawerNavigation.openDrawer()}
-        />
-      )}
+      {back ? backAction : isIOS ? searchAction : null}
       <Appbar.Content title={options.title || route.name} />
+      {!isIOS && searchAction}
+      <Appbar.Action icon="cog" onPress={togglePreferences} />
     </Appbar.Header>
   );
 }
 
 const Root = createNativeStackNavigator({
-  layout: ({ children }) => <View style={styles.stackWrapper}>{children}</View>,
+  initialRouteName: 'MainSample',
+  layout: ({ children }) => (
+    <>
+      <View style={styles.stackWrapper}>{children}</View>
+      <PreferencesModal />
+    </>
+  ),
   screenOptions: {
     header: (props) => <Header {...props} />,
   },
   screens: {
+    MainSample: createNativeStackScreen({
+      screen: MainSample,
+      options: {
+        title: 'Sample',
+      },
+      linking: '',
+    }),
     ExampleList: createNativeStackScreen({
       screen: ExampleList,
       options: {
