@@ -10,11 +10,12 @@ import { Appbar } from 'react-native-paper';
 import ExampleList, { examples } from './ExampleList';
 import PreferencesModal from './Preferences/PreferencesModal';
 import { usePreferences } from './Preferences/usePreferences';
-import MainSample from './Samples/MainSample';
+import SamplesList, { samples } from './SamplesList';
 
 const { TeamDetails, ...examplesWithoutParams } = examples;
 
 type ExampleRouteName = keyof typeof examplesWithoutParams;
+type SampleRouteName = keyof typeof samples;
 
 const fromEntries = <Key extends PropertyKey, Value>(
   entries: Array<[Key, Value]>
@@ -44,7 +45,7 @@ function Header({ navigation, route, options, back }: NativeStackHeaderProps) {
 }
 
 const Root = createNativeStackNavigator({
-  initialRouteName: 'MainSample',
+  initialRouteName: 'SamplesList',
   layout: ({ children }) => (
     <>
       <View style={styles.stackWrapper}>{children}</View>
@@ -55,13 +56,29 @@ const Root = createNativeStackNavigator({
     header: (props) => <Header {...props} />,
   },
   screens: {
-    MainSample: createNativeStackScreen({
-      screen: MainSample,
+    SamplesList: createNativeStackScreen({
+      screen: SamplesList,
       options: {
-        title: 'Sample',
+        title: 'Samples',
       },
       linking: '',
     }),
+    ...fromEntries(
+      (
+        Object.entries(samples) as [
+          SampleRouteName,
+          (typeof samples)[SampleRouteName],
+        ][]
+      ).map(([id, sample]) => [
+        id,
+        createNativeStackScreen({
+          screen: sample.screen,
+          options: {
+            title: sample.title,
+          },
+        }),
+      ])
+    ),
     ExampleList: createNativeStackScreen({
       screen: ExampleList,
       options: {
